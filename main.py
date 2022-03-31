@@ -1,8 +1,13 @@
-import json
+import requests
 
-json_text = '{"messages":[{"message":"This is the first message","timestamp":"2021-06-04 16:40:53"},{"message":"And this is a second message","timestamp":"2021-06-04 16:41:01"}]}'
+response = requests.get("https://playground.learnqa.ru/api/long_redirect", allow_redirects=True)
+response_0 = response.history
+response_1 = response.history[0]
+response_2 = response.history[1]
+response_3 = response.history[2]
 
-ex = json.loads(json_text)
-
-print(ex["messages"][1]["message"])
+print('Количество редиректов -', len(response_0))
+print('Начальная точка -', response_1.url)
+print('Промежуточная точка -', response_2.url)
+print('Конечная точка -', response_3.url)
 
