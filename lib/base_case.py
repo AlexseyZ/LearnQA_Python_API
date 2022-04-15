@@ -5,12 +5,12 @@ from requests import Response
 
 class BaseCase:
     def get_cookie(self, response: Response, cookie_name):
-        assert cookie_name in response.cookies, f"Не удалось найти файл - {cookie_name}"
+        assert cookie_name in response.cookies, f"Не удалось найти файл - '{cookie_name}'"
         print(cookie_name)
         return response.cookies[cookie_name]
 
     def get_header(self, response: Response, headers_name):
-        assert headers_name in response.headers, f"Не удалось найти заголовок - {headers_name}"
+        assert headers_name in response.headers, f"Не удалось найти заголовок - '{headers_name}'"
         return response.headers[headers_name]
 
     def get_json_value(self, response: Response, name):
