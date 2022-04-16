@@ -14,13 +14,13 @@ class TestUserRegister(BaseCase):
         domain = 'example.com'
         random_part = datetime.now().strftime("%m%d%Y%H%M%S")
         self.email = f"{base_part}@{random_part}{domain}"
-        # print('Итоговый email -', self.email)
+        print('Итоговый email -', self.email)
 
     # Позитивный тест на создание пользователя
     def test_create_user_success(self):
         data = {
             'password': '123',
-            'username': 'Tona',
+            'username': 'ZverevHW16_9',
             'firstName': 'learnqa',
             'lastName': 'learnqa',
             'email': self.email
@@ -28,7 +28,10 @@ class TestUserRegister(BaseCase):
         }
 
         response = requests.post("https://playground.learnqa.ru/api/user/", data=data)
-        # print('Данные, которые передали для создания пользователя - ', data)
+        #print('Данные, которые передали для создания пользователя - ', data)
+        #print('test_create_user_success', response.content)
+
+
 
 
         # Проверяем код ответа
