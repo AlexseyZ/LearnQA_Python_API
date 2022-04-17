@@ -67,6 +67,10 @@ class Assertions:
         assert response.content.decode("utf-8") == error_message, f"Текст сообщения {response.content} != {error_message}"
 
     @staticmethod
+    def assert_edit_data_without_authorizationh(response: Response, error_message):
+        assert response.content.decode("utf-8") == error_message, f"Текст сообщения {response.content} != {error_message}"
+
+    @staticmethod
     def assert_json_has_not_key(response: Response, name):
         try:
             response_as_dict = response.json()
@@ -75,3 +79,4 @@ class Assertions:
             assert False, f"Ответ не в формате JSON. Текст '{response.text}'"
 
         assert name not in response_as_dict, f"В JSON есть ключ '{name}'"
+
