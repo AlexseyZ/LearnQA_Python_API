@@ -71,6 +71,16 @@ class Assertions:
         assert response.content.decode("utf-8") == error_message, f"Текст сообщения {response.content} != {error_message}"
 
     @staticmethod
+    def assert_delete_test_user(response: Response, error_message):
+        assert response.content.decode(
+            "utf-8") == error_message, f"Текст сообщения {response.content} != {error_message}"
+
+    @staticmethod
+    def assert_get_after_delete(response: Response, error_message):
+        assert response.content.decode(
+            "utf-8") == error_message, f"Текст сообщения {response.content} != {error_message}"
+
+    @staticmethod
     def assert_json_has_not_key(response: Response, name):
         try:
             response_as_dict = response.json()
