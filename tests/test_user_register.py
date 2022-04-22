@@ -1,80 +1,59 @@
 import random
 import pytest
-import string
-
+import allure
 from lib.base_case import BaseCase
 from lib.assertions import Assertions
 from lib.my_requests import MyRequest
 
 
 
+@allure.epic("Создание пользователя")
 class TestUserRegister(BaseCase):
-
-    # Позитивный тест на создание пользователя
+    @allure.title("Позитивный тест на создание пользователя")
+    @allure.severity('CRITICAL')
+    @allure.issue("https://www.learnqa.ru/")
+    @allure.testcase("http://www.testlink.com")
     def test_create_user_success(self):
         data = self.prepare_registration_data()
+        with allure.step(f"Регистрируемся {register_data}"):
+            response = MyRequest.post("/user/", data=data)
 
-        '''
-        data = {
-            'password': '123',
-            'username': 'ZverevHW16_9',
-            'firstName': 'learnqa',
-            'lastName': 'learnqa',
-            'email': self.email
-
-        }
-        '''
-        response = MyRequest.post("/user/", data=data)
-        #print('Данные, которые передали для создания пользователя - ', data)
-        #print('test_create_user_success', response.content)
+        with allure.step("Проверяем код ответа"):
+            Assertions.assert_status_code(response, 200)
+        with allure.step("Проверяем что в ответе есть ключ id"):
+            Assertions.assert_json_has_key(response, "id")
 
 
-
-
-        # Проверяем код ответа
-        Assertions.assert_status_code(response, 200)
-        # Проверяем что в ответе есть ключ id
-        Assertions.assert_json_has_key(response, "id")
-        # print('Пользователь создан успешно - ', response.content)
-
-    # Тест - пользователь уже существует
+    @allure.title("Тест - пользователь уже существует")
+    @allure.severity('CRITICAL')
+    @allure.issue("https://www.learnqa.ru/")
+    @allure.testcase("http://www.testlink.com")
     def test_create_user_with_existing_email(self):
         email = 'vinkotov@example.com'
         data = self.prepare_registration_data(email)
-        '''
-        email = 'vinkotov@example.com'
-        data = {
-            'password': '123',
-            'username': 'learnqa',
-            'firstName': 'learnqa',
-            'lastName': 'learnqa',
-            'email': email
-        }
-        '''
-        response = MyRequest.post("/user/", data=data)
+        with allure.step("Создаем пользователя, который уже есть в системе"):
+            response = MyRequest.post("/user/", data=data)
 
-        # Проверяем код ответа
-        Assertions.assert_status_code(response, 400)
-        # Пользователь уже существует
-        Assertions.assert_create_user_with_existing_email(response, f"Users with email '{email}' already exists")
+        with allure.step("Проверяем код ответа"):
+            Assertions.assert_status_code(response, 400)
+        with allure.step("Проверяем текст сообщения"):
+            Assertions.assert_create_user_with_existing_email(response, f"Users with email '{email}' already exists")
+        with allure.step("Сохраняем тело ответа"):
+            allure.attach(response.content, 'Response_body')
 
-    # Создаем пользователя с  невалидным email
+    @allure.title("Создание пользователя email невалидный")
+    @allure.severity('Minor')
+    @allure.issue("https://www.learnqa.ru/")
+    @allure.testcase("http://www.testlink.com")
     def test_create_user_invalid_email(self):
         invalid_email = 'zverevexample.com'
         data = self.prepare_registration_data_invaid_email()
-
-        '''
-        data = {
-            'password': '123',
-            'username': 'Qa',
-            'firstName': 'QC',
-            'lastName': 'QA/QC',
-            'email': invalid_email
-        }
-        '''
-        response = MyRequest.post("/user/", data=data)
-
-        Assertions.assert_invalid_email(response, "Invalid email format")
+        with allure.step("Регистрируемся с невалидным email"):
+            response = MyRequest.post("/user/", data=data)
+        with allure.step("Проверяем текст сообщения"):
+            Assertions.assert_invalid_email(response, "Invalid email format")
+        with allure.step("Сохраняем тело ответа"):
+            allure.attach(response.content, 'Response_body')
 
     # Переменные для параметризованного теста
     data_no_password = {
@@ -117,27 +96,54 @@ class TestUserRegister(BaseCase):
         (data_no_email)
     ]
 
-    # Создание пользователя без обязательных параметров
+
+    @allure.title("Создание пользователя без обязательных параметров")
+    @allure.severity('Minor')
+    @allure.issue("https://www.learnqa.ru/")
+    @allure.testcase("http://www.testlink.com")
     @pytest.mark.parametrize('data', user1)
     def test_user_no_parameter(self, data):
 
         d = data
-        response = MyRequest.post("/user/", data=d)
-        # print(response.content)
-        if data == self.data_no_all_parameters:
-            Assertions.assert_invalid_parametrs(response, "The following required params are missed: email, password, username, firstName, lastName")
-        elif data == self.data_no_password:
-            Assertions.assert_invalid_parametrs(response, "The following required params are missed: password")
-        elif data == self.data_no_username:
-            Assertions.assert_invalid_parametrs(response, "The following required params are missed: username")
-        elif data == self.data_no_firstName:
-            Assertions.assert_invalid_parametrs(response, "The following required params are missed: firstName")
-        elif data == self.data_no_lastName:
-            Assertions.assert_invalid_parametrs(response, "The following required params are missed: lastName")
-        elif data == self.data_no_email:
-            Assertions.assert_invalid_parametrs(response, "The following required params are missed: email")
+        with allure.step("Регистрация без обязательных параметров"):
+            response = MyRequest.post("/user/", data=d)
 
-    # Создание пользователя с коротким именем
+        if data == self.data_no_all_parameters:
+            with allure.step("Проверяем текст сообщения, когда создаём пользователя без всех параметров"):
+                Assertions.assert_invalid_parametrs(response, "The following required params are missed: email, password, username, firstName, lastName")
+            with allure.step("Сохраняем тело ответа"):
+                allure.attach(response.content, 'Response_body')
+        elif data == self.data_no_password:
+            with allure.step("Проверяем текст сообщения, когда создаём пользователя без пароля"):
+                Assertions.assert_invalid_parametrs(response, "The following required params are missed: password")
+            with allure.step("Сохраняем тело ответа"):
+                allure.attach(response.content, 'Response_body')
+        elif data == self.data_no_username:
+            with allure.step("Проверяем текст сообщения, когда создаём пользователя без username"):
+                Assertions.assert_invalid_parametrs(response, "The following required params are missed: username")
+            with allure.step("Сохраняем тело ответа"):
+                allure.attach(response.content, 'Response_body')
+        elif data == self.data_no_firstName:
+            with allure.step("Проверяем текст сообщения, когда создаём пользователя без firstName"):
+                Assertions.assert_invalid_parametrs(response, "The following required params are missed: firstName")
+            with allure.step("Сохраняем тело ответа"):
+                allure.attach(response.content, 'Response_body')
+        elif data == self.data_no_lastName:
+            with allure.step("Проверяем текст сообщения, когда создаём пользователя без lastName"):
+                Assertions.assert_invalid_parametrs(response, "The following required params are missed: lastName")
+            with allure.step("Сохраняем тело ответа"):
+                allure.attach(response.content, 'Response_body')
+        elif data == self.data_no_email:
+            with allure.step("Проверяем текст сообщения, когда создаём пользователя без email"):
+                Assertions.assert_invalid_parametrs(response, "The following required params are missed: email")
+            with allure.step("Сохраняем тело ответа"):
+                allure.attach(response.content, 'Response_body')
+
+
+    @allure.title("Создание пользователя с коротким именем 1 символ")
+    @allure.severity('Minor')
+    @allure.issue("https://www.learnqa.ru/")
+    @allure.testcase("http://www.testlink.com")
     def test_short_name(self):
         data = self.prepare_registration_data()
         username1 = data['username'][:1]
@@ -152,10 +158,18 @@ class TestUserRegister(BaseCase):
             'email': self.email
         }
         '''
-        response = MyRequest.post("/user/", data=data)
-        Assertions.assert_short_name(response, "The value of 'username' field is too short")
+        with allure.step("Регистрация с коротким именем"):
+            response = MyRequest.post("/user/", data=data)
+        with allure.step("Проверяем текст сообщения"):
+            Assertions.assert_short_name(response, "The value of 'username' field is too short")
+        with allure.step("Сохраняем тело ответа"):
+            allure.attach(response.content, 'Response_body')
 
     # Создание пользователя с длинным именем
+    @allure.title("Создание пользователя с длинным именем более 255 символов")
+    @allure.severity('Minor')
+    @allure.issue("https://www.learnqa.ru/")
+    @allure.testcase("http://www.testlink.com")
     def test_long_name(self):
         data = self.prepare_registration_data()
         username1 = data['username'][:1]*251
@@ -174,7 +188,9 @@ class TestUserRegister(BaseCase):
             'email': self.email
         }
         '''
-
-        response = MyRequest.post("/user/", data=data)
-        Assertions.assert_long_name(response, "The value of 'username' field is too long")
-
+        with allure.step("Регистрация длинным именем"):
+            response = MyRequest.post("/user/", data=data)
+        with allure.step("Проверяем текст сообщения"):
+            Assertions.assert_long_name(response, "The value of 'username' field is too long")
+        with allure.step("Сохраняем тело ответа"):
+            allure.attach(response.content, 'Response_body')

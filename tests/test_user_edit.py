@@ -2,17 +2,23 @@ import requests
 from lib.base_case import BaseCase
 from lib.assertions import Assertions
 from lib.my_requests import MyRequest
+import allure
 
-
+@allure.epic("Редактирование пользователя")
 class TestUserEdit(BaseCase):
+    @allure.title("Позитивный сценарий: регистрация, авторизация, редактирование")
+    @allure.severity('CRITICAL')
+    @allure.issue("https://www.learnqa.ru/")
+    @allure.testcase("http://www.testlink.com")
     def test_edit_just_created_user(self):
         # REGISTER
         register_data = self.prepare_registration_data()
-        response1 = MyRequest.post("/user/", data=register_data)
-        #response1 = requests.post("https://playground.learnqa.ru/api/user/", data=register_data)
-        Assertions.assert_status_code(response1, 200)
-        Assertions.assert_json_has_key(response1, "id")
-        print(response1.content)
+        with allure.step(f"Регистрируемся {register_data}"):
+            response1 = MyRequest.post("/user/", data=register_data)
+        with allure.step("Проверяем код ответа"):
+            Assertions.assert_status_code(response1, 200)
+        with allure.step("Проверяем что в ответе есть ключ id"):
+            Assertions.assert_json_has_key(response1, "id")
 
         email = register_data['email']
         first_name = register_data['firstName']
@@ -27,8 +33,8 @@ class TestUserEdit(BaseCase):
         }
 
         print('login_data- ', login_data)
-
-        response2 = MyRequest.post("/user/login", data=register_data)
+        with allure.step(f"Авторизация {login_data}"):
+            response2 = MyRequest.post("/user/login", data=register_data)
         # response2 = requests.post("https://playground.learnqa.ru/api/user/login", data=login_data)
 
         auth_sid = self.get_cookie(response2, "auth_sid")
@@ -37,56 +43,61 @@ class TestUserEdit(BaseCase):
         # EDIT
 
         new_name = "Changed name"
-
-        response3 = MyRequest.put(
-            f"/user/{user_id}",
-            headers={"x-csrf-token": token},
-            cookies={"auth_sid": auth_sid},
-            data={"firstName": new_name}
-        )
-
-        Assertions.assert_status_code(response3, 200)
+        with allure.step(f"Редактируем пользователя {user_id}"):
+            response3 = MyRequest.put(
+                f"/user/{user_id}",
+                headers={"x-csrf-token": token},
+                cookies={"auth_sid": auth_sid},
+                data={"firstName": new_name}
+            )
+        with allure.step(f"Проверяем код ответа"):
+            Assertions.assert_status_code(response3, 200)
 
         # GET
+        with allure.step(f"Получаем данные о пользователя которому изменили имя"):
+            response4 = MyRequest.get(
+                f"/user/{user_id}",
+                headers={"x-csrf-token": token},
+                cookies={"auth_sid": auth_sid}
+            )
+        with allure.step(f"Проверям что имя изменилось на {new_name}"):
+            Assertions.assert_json_value_by_name(
+                response4,
+                "firstName",
+                new_name,
+                "Неверное имя пользователя после редактирования"
+            )
 
-        response4 = MyRequest.get(
-            f"/user/{user_id}",
-            headers={"x-csrf-token": token},
-            cookies={"auth_sid": auth_sid}
-        )
-
-        Assertions.assert_json_value_by_name(
-            response4,
-            "firstName",
-            new_name,
-            "Неверное имя пользователя после редактирования"
-        )
-
-    # Меняем данные неавторизованным пользователем
-
+    @allure.title("Меняем данные неавторизованным пользователем")
+    @allure.severity('CRITICAL')
+    @allure.issue("https://www.learnqa.ru/")
+    @allure.testcase("http://www.testlink.com")
     def test_edit_data_without_authorizationh(self):
         new_name2 = "Zverev"
-        response5 = MyRequest.put(
-            f"/user/31103",
-            data={"firstName": new_name2}
-        )
+        with allure.step("Выполняем запрос на редактирование без авторизации"):
+            response5 = MyRequest.put(
+                f"/user/31103",
+                data={"firstName": new_name2}
+            )
+        with allure.step("Проверям код ответа"):
+            Assertions.assert_status_code(response5, 400)
+        with allure.step("Проверям текст сообщения"):
+            Assertions.assert_edit_data_without_authorizationh(response5, 'Auth token not supplied')
+        with allure.step("Сохраняем тело ответа"):
+            allure.attach(response5.content, 'Response_body')
 
-        Assertions.assert_status_code(response5, 400)
-        Assertions.assert_edit_data_without_authorizationh(response5, 'Auth token not supplied')
-
-        print(response5.status_code)
-
-        print('test_edit_user_no_auth - ', response5.content)
-
-
-    # Меняем данные под другим пользователем
-
+    @allure.title("Меняем данные под другим пользователем")
+    @allure.severity('CRITICAL')
+    @allure.issue("https://www.learnqa.ru/")
+    @allure.testcase("http://www.testlink.com")
     def test_edit_data_under_a_different_user(self):
         register_data = self.prepare_registration_data()
-        response1 = MyRequest.post("/user/", data=register_data)
-        # response1 = requests.post("https://playground.learnqa.ru/api/user/", data=register_data)
-        Assertions.assert_status_code(response1, 200)
-        Assertions.assert_json_has_key(response1, "id")
+        with allure.step(f"Выполняем регистрацию {register_data}"):
+            response1 = MyRequest.post("/user/", data=register_data)
+        with allure.step("Проверяем код ответа"):
+            Assertions.assert_status_code(response1, 200)
+        with allure.step("Проверяем что в ответе есть ключ id"):
+            Assertions.assert_json_has_key(response1, "id")
         # print(response1.content)
 
         email = register_data['email']
@@ -101,40 +112,44 @@ class TestUserEdit(BaseCase):
             'password': password
         }
 
-        print('login_data- ', login_data)
-
-        response2 = MyRequest.post("/user/login", data=register_data)
-        #response2 = requests.post("https://playground.learnqa.ru/api/user/login", data=login_data)
-
-        print('response2', response2.content)
+        with allure.step(f"Авторизация {login_data}"):
+            response2 = MyRequest.post("/user/login", data=register_data)
 
         auth_sid = self.get_cookie(response2, "auth_sid")
         token = self.get_header(response2, "x-csrf-token")
-        print(auth_sid)
-        print(token)
+
 
         new_name2 = "Zverev2"
-        response3 = MyRequest.put(
-            f"/user/31103",
-            data={"firstName": new_name2},
-            headers={"x-csrf-token": token},
-            cookies={"auth_sid": auth_sid},
+        with allure.step("Редактируем имя чужого пользователя"):
+            response3 = MyRequest.put(
+                f"/user/31103",
+                data={"firstName": new_name2},
+                headers={"x-csrf-token": token},
+                cookies={"auth_sid": auth_sid},
 
-        )
-        # print('response3', response3.status_code)
-        # print('test_edit_data_under_a_different_user', response3.content)
+            )
 
         # Методе PUT при редактировании данных под другим пользователем работает неправильно
-        Assertions.assert_status_code(response3, 404)
+        with allure.step("Проверяем код ответа"):
+            Assertions.assert_status_code(response3, 404)
+        with allure.step("Сохраняем тело ответа"):
+            allure.attach(response3.content, 'Response_body')
 
-    # Меняем email на невалидный, без символа - @ (авторизованный пользователь)
+
+
+    @allure.title("Меняем email на невалидный, без символа - @ (авторизованный пользователь)")
+    @allure.severity('MINOR')
+    @allure.issue("https://www.learnqa.ru/")
+    @allure.testcase("http://www.testlink.com")
     def test_edit_invalid_email(self):
         register_data = self.prepare_registration_data()
-        response1 = MyRequest.post("/user/", data=register_data)
-        # response1 = requests.post("https://playground.learnqa.ru/api/user/", data=register_data)
-        Assertions.assert_status_code(response1, 200)
-        Assertions.assert_json_has_key(response1, "id")
-        # print(response1.content)
+        with allure.step(f"Выполняем регистрацию {register_data}"):
+            response1 = MyRequest.post("/user/", data=register_data)
+        with allure.step("Проверяем код ответа"):
+            Assertions.assert_status_code(response1, 200)
+        with allure.step("Проверяем что в ответе есть ключ id"):
+            Assertions.assert_json_has_key(response1, "id")
+
 
         email = register_data['email']
         first_name = register_data['firstName']
@@ -148,40 +163,40 @@ class TestUserEdit(BaseCase):
             'password': password
         }
 
-        print('login_data- ', login_data)
-
-        response2 = MyRequest.post("/user/login", data=register_data)
-        # response2 = requests.post("https://playground.learnqa.ru/api/user/login", data=login_data)
-
-        print('response2', response2.content)
+        with allure.step(f"Авторизация {login_data}"):
+            response2 = MyRequest.post("/user/login", data=register_data)
 
         auth_sid = self.get_cookie(response2, "auth_sid")
         token = self.get_header(response2, "x-csrf-token")
-        # print(auth_sid)
-        # print(token)
+
 
         invalid_email = "Zverevexample.com"
-        response3 = MyRequest.put(
-            f"/user/31103",
-            data={"email": invalid_email},
-            headers={"x-csrf-token": token},
-            cookies={"auth_sid": auth_sid},
+        with allure.step(f"Редактируем email {invalid_email}"):
+            response3 = MyRequest.put(
+                f"/user/31103",
+                data={"email": invalid_email},
+                headers={"x-csrf-token": token},
+                cookies={"auth_sid": auth_sid},
 
-        )
-        #print('response3', response3.status_code)
-        #print('test_edit_invalid', response3.content)
+            )
+        with allure.step("Проверяем код ответа"):
+            Assertions.assert_status_code(response3, 400)
+        with allure.step("Проверяем текст сообщения"):
+            Assertions.assert_invalid_email(response3, 'Invalid email format')
 
-        Assertions.assert_status_code(response3, 400)
-        Assertions.assert_invalid_email(response3, 'Invalid email format')
-
-    # Меняем имя на короткое (авторизованный пользоваетель)
+    @allure.title("Меняем имя на короткое - 1 символ (авторизованный пользоваетель)")
+    @allure.severity('MINOR')
+    @allure.issue("https://www.learnqa.ru/")
+    @allure.testcase("http://www.testlink.com")
     def test_edit_short_name(self):
         register_data = self.prepare_registration_data()
-        response1 = MyRequest.post("/user/", data=register_data)
-        # response1 = requests.post("https://playground.learnqa.ru/api/user/", data=register_data)
-        Assertions.assert_status_code(response1, 200)
-        Assertions.assert_json_has_key(response1, "id")
-        # print(response1.content)
+        with allure.step(f"Выполняем регистрацию {register_data}"):
+            response1 = MyRequest.post("/user/", data=register_data)
+        with allure.step("Проверяем код ответа"):
+            Assertions.assert_status_code(response1, 200)
+        with allure.step("Проверяем что в ответе есть ключ id"):
+            Assertions.assert_json_has_key(response1, "id")
+
 
         email = register_data['email']
         first_name = register_data['firstName']
@@ -195,12 +210,8 @@ class TestUserEdit(BaseCase):
             'password': password
         }
 
-        print('login_data- ', login_data)
-
-        response2 = MyRequest.post("/user/login", data=register_data)
-        # response2 = requests.post("https://playground.learnqa.ru/api/user/login", data=login_data)
-
-        print('response2', response2.content)
+        with allure.step(f"Авторизация {login_data}"):
+            response2 = MyRequest.post("/user/login", data=register_data)
 
         auth_sid = self.get_cookie(response2, "auth_sid")
         token = self.get_header(response2, "x-csrf-token")
@@ -208,18 +219,21 @@ class TestUserEdit(BaseCase):
         print(token)
 
         short_firstname = "Z"
-        response3 = MyRequest.put(
-            f"/user/31103",
-            data={"firstName": short_firstname},
-            headers={"x-csrf-token": token},
-            cookies={"auth_sid": auth_sid},
+        with allure.step(f"Меняем на имя содержащие 1 символ {short_firstname}"):
+            response3 = MyRequest.put(
+                f"/user/31103",
+                    data={"firstName": short_firstname},
+                    headers={"x-csrf-token": token},
+                    cookies={"auth_sid": auth_sid},
 
-        )
-        print('response3', response3.status_code)
-        print('short_name', response3.content)
+            )
 
-        Assertions.assert_status_code(response3, 400)
+        with allure.step("Проверяем код ответа"):
+            Assertions.assert_status_code(response3, 400)
         error_message = self.get_json_value(response3, "error")
-        assert error_message == "Too short value for field firstName"
+        with allure.step("Проверяем текст сообщения"):
+            assert error_message == "Too short value for field firstName"
+        with allure.step("Сохраняем тело ответа"):
+            allure.attach(response3.content, 'Response_body')
 
 
